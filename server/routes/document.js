@@ -1,3 +1,4 @@
+console.log("DOCUMENT ROUTES LOADED");
 const express = require("express");
 const router = express.Router();
 
@@ -27,5 +28,14 @@ router.post(
     }
   }
 );
+
+router.get("/all", async (req, res) => {
+  try {
+    const documents = await Document.find().sort({ uploadDate: -1 });
+    res.json(documents);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;
