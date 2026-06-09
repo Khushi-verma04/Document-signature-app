@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const cors = require("cors");
 const documentRoutes = require("./routes/document");
+const signatureRoutes = require("./routes/signatureRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ const authRoutes = require("./routes/auth");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/docs", documentRoutes);
+app.use("/api/signatures",signatureRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
