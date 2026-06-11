@@ -2,6 +2,7 @@ const fs = require("fs");
 const { PDFDocument, rgb } = require("pdf-lib");
 
 async function stampPDF(inputPath, outputPath, x, y) {
+  console.log("INPUT:", inputPath);
   const existingPdfBytes = fs.readFileSync(inputPath);
 
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
