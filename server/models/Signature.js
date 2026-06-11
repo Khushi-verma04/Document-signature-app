@@ -18,6 +18,10 @@ const signatureSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  page: {
+    type: Number,
+    default: 1
+  },
   status: {
     type: String,
     enum: ["pending", "signed"],

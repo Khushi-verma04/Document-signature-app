@@ -22,10 +22,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/docs", documentRoutes);
 app.use("/api/signatures",signatureRoutes);
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+  console.log("MongoDB Connected");
+  app.listen(5000, () => {
+    console.log("Server running on port 5000");
+  });
+})
+.catch((err) => {
+  console.log(err);
+});
 
 app.get("/", (req, res) => {
   res.send("Server Running");
@@ -40,8 +46,4 @@ app.get("/check-upload", (req, res) => {
   res.sendFile(
     path.join(__dirname, "uploads", "1780734934869-khushi.resume.pdf")
   );
-});
-
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
 });

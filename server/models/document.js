@@ -15,4 +15,4 @@ const documentSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("Document", documentSchema);
+module.exports = mongoose.models.Document || mongoose.model("Document", documentSchema);

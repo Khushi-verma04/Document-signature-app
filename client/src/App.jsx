@@ -1,4 +1,6 @@
+import { Routes, Route, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import PDFViewer from "./PDFViewer";
 
 function App() {
   const [documents, setDocuments] = useState([]);
@@ -23,31 +25,46 @@ function App() {
 
   console.log("Documents State:", documents);
 
-  return (
-    <div className="p-10">
-      <h1 className="text-4xl font-bold">
-        Document Signature App
-      </h1>
+ return (
+  <Routes>
+    <Route
+      path="/"
+      element={
+        <div className="p-10">
+          <h1 className="text-4xl font-bold">
+            Document Signature App
+          </h1>
 
-      <h2 className="mt-6 text-2xl font-semibold">
-        My Documents
-      </h2>
+          <h2 className="mt-6 text-2xl font-semibold">
+            My Documents
+          </h2>
 
-      {documents.map((doc) => (
-        <div key={doc._id}>
-          <p>{doc.originalName}</p>
+          {documents.map((doc) => (
+            <div key={doc._id}>
+              <p>{doc.originalName}</p>
 
-          <a
-            href={`http://localhost:5000/${doc.filePath ? doc.filePath.replace(/\\/g, "/") : ""}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Preview PDF
-          </a>
+             <Link
+             to="/viewer"
+             state={{
+             pdfUrl: `http://localhost:5000/${doc.filePath.replace(/\\/g, "/")}`,
+             fileId: doc._id,
+             }}
+             >
+             Preview PDF
+            </Link>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
+      }
+    />
+
+    <Route
+      path="/viewer"
+      element={<PDFViewer />}
+    />
+    
+  </Routes>
+);
 }
 
 export default App;
