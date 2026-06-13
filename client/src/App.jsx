@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import PDFViewer from "./PDFViewer";
 
 import SignDocument from "./pages/SignDocument";
-import { Routes, Route, Link } from "react-router-dom"; // Fixed: Removed BrowserRouter from here
+import Dashboard from "./pages/Dashboard"; // ✅ ADDED
+import { Routes, Route, Link } from "react-router-dom";
 import axios from "axios";
 
 function App() {
@@ -29,8 +30,8 @@ function App() {
   console.log("Documents State:", documents);
 
   return (
-    // Fixed: Removed <BrowserRouter> wrapping from here
     <Routes>
+
       <Route
         path="/"
         element={
@@ -62,12 +63,11 @@ function App() {
         }
       />
 
-      <Route
-        path="/viewer"
-        element={<PDFViewer />}
-      />
+      <Route path="/viewer" element={<PDFViewer />} />
 
       <Route path="/sign/:token" element={<SignDocument />} />
+
+      <Route path="/dashboard" element={<Dashboard />} />
 
     </Routes>
   );
