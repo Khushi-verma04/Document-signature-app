@@ -4,6 +4,8 @@ const router = express.Router();
 const Signature = require("../models/Signature");
 const Document = require("../models/document");
 const stampPDF = require("../utils/pdfStamp");
+const auditMiddleware = require("../middleware/auditMiddleware");
+const Audit = require("../models/Audit");
 
 
 // 🔥 Public signing link
@@ -38,7 +40,7 @@ router.get("/sign/:token", async (req, res) => {
 
 
 // 🔥 Save signature + stamp PDF
-router.post("/", async (req, res) => {
+router.post("/", auditMiddleware, async (req, res) => {
   try {
     const { fileId, signer, x, y } = req.body;
 
@@ -65,6 +67,13 @@ router.post("/", async (req, res) => {
       y: Number(y)  // Fixed: Formatted data type before saving to DB
     });
 
+    await Audit.create({
+    fileId,
+    signer,
+    ipAddress: req.ipAddress,
+    signedAt: new Date()
+    });
+
     return res.status(201).json({
       message: "Signature saved successfully",
       signature,
@@ -75,6 +84,23 @@ router.post("/", async (req, res) => {
     console.log("SIGN POST ERROR:", error); // 👈 IMPORTANT
     return res.status(500).json({
       message: "Server error in signature save"
+    });
+  }
+});
+
+router.get("/audit/:fileId", async (req, res) => {
+  try {
+    const audits = await Audit.find({ fileId: req.params.fileId });
+
+    return res.json({
+      message: "Audit trail fetched successfully",
+      audits
+    });
+
+  } catch (error) {
+    console.log("AUDIT ERROR:", error);
+    return res.status(500).json({
+      message: "Server error while fetching audit"
     });
   }
 });
