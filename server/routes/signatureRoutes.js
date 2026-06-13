@@ -105,4 +105,37 @@ router.get("/audit/:fileId", async (req, res) => {
   }
 });
 
+router.post("/status/:id", async (req, res) => {
+  try {
+    const { status, reason } = req.body;
+
+    const signature = await Signature.findById(req.params.id);
+
+    if (!signature) {
+      return res.status(404).json({ message: "Signature not found" });
+    }
+
+    if (signature.status === "signed") {
+      return res.status(400).json({ message: "Already signed, cannot change" });
+    }
+
+    signature.status = status;
+
+    if (status === "rejected") {
+      signature.reason = reason || "No reason provided";
+    }
+
+    await signature.save();
+
+    res.json({
+      message: "Status updated successfully",
+      signature
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
