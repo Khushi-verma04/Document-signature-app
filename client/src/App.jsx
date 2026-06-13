@@ -12,7 +12,7 @@ function App() {
   useEffect(() => {
     async function getDocs() {
       try {
-        const res = await fetch("http://localhost:5000/api/docs/all");
+        const res = await fetch("https://document-signature-app-uieb.onrender.com/api/docs/all");
         console.log("Status:", res.status);
 
         const data = await res.json();
