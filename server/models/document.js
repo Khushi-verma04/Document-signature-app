@@ -12,6 +12,11 @@ const documentSchema = new mongoose.Schema({
     uploadDate: {
         type: Date,
         default: Date.now
+    },
+    token:{
+        type: String,
+        unique: true,
+        required: true
     }
 });
 

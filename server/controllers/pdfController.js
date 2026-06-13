@@ -9,7 +9,7 @@ export const addSignature = async () => {
   const pages = pdfDoc.getPages();
   const firstPage = pages[0];
 
-  firstPage.drawText("Signed by Madan Mohan", {
+  firstPage.drawText("Signed by Khushi Verma", {
     x: 200,
     y: 350,
     size: 18,
