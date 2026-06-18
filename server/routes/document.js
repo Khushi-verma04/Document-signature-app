@@ -83,4 +83,17 @@ router.get("/sign/:token", async (req, res) => {
   }
 });
 
+// 🔥 Delete a document by ID
+router.delete("/:id", async (req, res) => {
+  try {
+    const doc = await Document.findByIdAndDelete(req.params.id);
+    if (!doc) return res.status(404).json({ message: "Document not found" });
+
+    // (Optional) अगर आप चाहें तो fs.unlinkSync से फाइल अपलोड फोल्डर से भी डिलीट कर सकती हैं
+    res.json({ message: "Document deleted successfully from database" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

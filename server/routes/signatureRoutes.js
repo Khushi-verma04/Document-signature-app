@@ -42,7 +42,8 @@ router.get("/sign/:token", async (req, res) => {
 // 🔥 Save signature + stamp PDF
 router.post("/", auditMiddleware, async (req, res) => {
   try {
-    const { fileId, signer, x, y } = req.body;
+    // ✅ Fixed: Added fontFamily here to accept it from frontend payload
+    const { fileId, signer, fontFamily, x, y } = req.body;
 
     console.log("SIGN POST HIT:", req.body); // 👈 DEBUG
 
@@ -57,8 +58,15 @@ router.post("/", auditMiddleware, async (req, res) => {
     const inputPath = document.filePath;
     const outputPath = inputPath.replace(".pdf", "-signed.pdf");
 
-    // Fixed: Numbers convert kiye taaki pdfStamp engine core numbers extract kar sake, strings nahi
-    await stampPDF(inputPath, outputPath, Number(x), Number(y)); 
+    // ✅ Fixed: Passed fontFamily into stampPDF engine core
+    await stampPDF(
+      inputPath,
+      outputPath,
+      Number(x),
+      Number(y),
+      signer,
+      fontFamily
+    );
 
     const signature = await Signature.create({
       fileId,
@@ -68,10 +76,10 @@ router.post("/", auditMiddleware, async (req, res) => {
     });
 
     await Audit.create({
-    fileId,
-    signer,
-    ipAddress: req.ipAddress,
-    signedAt: new Date()
+      fileId,
+      signer,
+      ipAddress: req.ipAddress,
+      signedAt: new Date()
     });
 
     return res.status(201).json({

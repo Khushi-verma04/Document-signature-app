@@ -1,92 +1,131 @@
 import { useLocation } from "react-router-dom";
 import { useState, useRef } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+
+// नया लोकल नोड मॉड्यूल वर्कर पाथ जो एरर को ठीक करेगा
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 function PDFViewer() {
   const location = useLocation();
+  const signer = location.state?.signer || "Signature";
+  const selectedFont = location.state?.selectedFont || "cursive";
+  
+  const containerRef = useRef(null);
+  const [numPages, setNumPages] = useState(null);
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [rel, setRel] = useState({ x: 0, y: 0 });
 
-  const pdfRef = useRef(null);
+  const BASE_URL = "http://localhost:5000";
 
-  const [position, setPosition] = useState({ x: 100, y: 100 });
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  function onDocumentLoadSuccess({ numPages }) {
+    setNumPages(numPages);
+  }
+
+  const onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    const boundingBox = e.currentTarget.getBoundingClientRect();
+    setRel({
+      x: e.clientX - boundingBox.left,
+      y: e.clientY - boundingBox.top,
+    });
+    e.preventDefault();
+  };
+
+  const onMouseMove = (e) => {
+    if (!isDragging) return;
+    const containerBox = containerRef.current.getBoundingClientRect();
+    
+    let x = e.clientX - containerBox.left - rel.x;
+    let y = e.clientY - containerBox.top - rel.y;
+
+    setPosition({ x, y });
+  };
+
+  const onMouseUp = () => {
+    setIsDragging(false);
+  };
 
   const saveSignature = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/signatures", {
+      if (!location.state?.fileId) {
+        alert("File ID missing! Cannot save signature.");
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/api/signatures`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileId: location.state?.fileId,
-          signer: "test@gmail.com",
+          signer: signer,
+          fontFamily: selectedFont,
           x: position.x,
           y: position.y,
         }),
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to save signature");
 
-      console.log(data);
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
-      alert("Signature saved successfully");
+      alert("Signature Saved Successfully!");
+      const pdfUrl = `${BASE_URL}/${data.signedPdfPath.replace(/\\/g, "/")}`;
+      window.open(pdfUrl, "_blank");
     } catch (error) {
       console.error(error);
       alert(error.message);
     }
   };
 
+  const getFontClass = (font) => {
+    if (font === "cursive") return "font-serif italic";
+    if (font === "serif") return "font-serif italic";
+    if (font === "monospace") return "font-mono";
+    return "font-sans font-bold";
+  };
+
   return (
-    <div>
-      <h1>PDF Viewer Page</h1>
-      <button onClick={saveSignature}>
+    <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">PDF Viewer Page</h1>
+
+      <button 
+        onClick={saveSignature} 
+        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow mb-6 transition-all"
+      >
         Save Signature
       </button>
 
-      <div ref={pdfRef} style={{ position: "relative" }}>
-        <iframe
-          src={location.state?.pdfUrl}
-          width="100%"
-          height="700px"
-        ></iframe>
+      <div 
+        ref={containerRef}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        className="relative bg-white shadow-lg border border-gray-300"
+        style={{ width: "max-content" }}
+      >
+        <Document
+          file={location.state?.pdfUrl}
+          onLoadSuccess={onDocumentLoadSuccess}
+          className="block"
+        >
+          <Page pageNumber={1} renderTextLayer={false} renderAnnotationLayer={false} />
+        </Document>
 
         <div
-          draggable
-          onDragStart={(e) => {
-            setOffset({
-              x: e.clientX - position.x,
-              y: e.clientY - position.y,
-            });
-          }}
-          onDragEnd={(e) => {
-            const rect = pdfRef.current.getBoundingClientRect();
-
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            setPosition({
-              x,
-              y,
-            });
-          }}
+          onMouseDown={onMouseDown}
+          className={`absolute p-2 border-2 border-dashed border-blue-500 bg-blue-500/10 cursor-move select-none text-2xl text-blue-800 ${getFontClass(selectedFont)}`}
           style={{
-            position: "absolute",
-            top: position.y,
-            left: position.x,
-            width: "120px",
-            height: "40px",
-            border: "2px dashed blue",
-            backgroundColor: "rgba(0,0,255,0.1)",
-            textAlign: "center",
-            lineHeight: "40px",
-            cursor: "move",
+            top: `${position.y}px`,
+            left: `${position.x}px`,
           }}
         >
-          Sign Here
+          {signer}
         </div>
       </div>
-
     </div>
   );
 }
